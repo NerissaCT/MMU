@@ -1,3 +1,6 @@
 #!/bin/bash
 set -e
-ghdl -a -fsynopsys --std=08 MMU.vhd
+ghdl -a MMU.vhd
+ghdl -a MMUTB.vhd
+ghdl -r MMUTB --vcd=waves.vcd   --stop-time=150ns
+gtkwave waves.vcd
