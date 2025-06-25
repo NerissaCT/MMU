@@ -1,6 +1,7 @@
 #!/bin/bash
-set -e
+rm -f *.cf
+rm -f waves2.vcd
 ghdl -a MMU.vhd
-ghdl -a MMUTB.vhd
-ghdl -r MMUTB --vcd=waves.vcd   --stop-time=150ns
-gtkwave waves.vcd
+ghdl -a MMU_TB.vhd
+ghdl -e MMU_TB
+ghdl -r MMU_TB --vcd=waves2.vcd  --stop-time=150ns
