@@ -30,7 +30,8 @@
 --  16 words of memory. The starting physical address is at offset 0, starting
 --  logical address is at offset 1, logical address mask at offset 2, index/
 --  status register is at offset 3 wihtin each block of four addresses for the 
---  segment registers. 
+--  segment registers. The status bits other than F only update on successful 
+--  accesses. 
 --
 --  
 --  Revision History:
@@ -138,7 +139,7 @@ IF rising_edge(CLK) THEN
                     PAB <= DEFAULT_PAB;
                     MMU_SEG_ONE(INDEX_STATUS_INDEX)(F) <= '1';
                     MMU_SEG_ONE(INDEX_STATUS_INDEX)(U) <= '0';
-                    MMU_SEG_ONE(INDEX_STATUS_INDEX)(D) <= '1';
+                    MMU_SEG_ONE(INDEX_STATUS_INDEX)(D) <= '0';
                     ProtFault <= '0';
                 --Otherwise
                 --Calculate the PAB
@@ -174,7 +175,7 @@ IF rising_edge(CLK) THEN
                     PAB <= DEFAULT_PAB;
                     MMU_SEG_TWO(INDEX_STATUS_INDEX)(F) <= '1';
                     MMU_SEG_TWO(INDEX_STATUS_INDEX)(U) <= '0';
-                    MMU_SEG_TWO(INDEX_STATUS_INDEX)(D) <= '1';
+                    MMU_SEG_TWO(INDEX_STATUS_INDEX)(D) <= '0';
                     ProtFault <= '0';
                 --Otherwise
                 --Calculate the PAB
@@ -212,7 +213,7 @@ IF rising_edge(CLK) THEN
                     PAB <= DEFAULT_PAB;
                     MMU_SEG_THREE(INDEX_STATUS_INDEX)(F) <= '1';
                     MMU_SEG_THREE(INDEX_STATUS_INDEX)(U) <= '0';
-                    MMU_SEG_THREE(INDEX_STATUS_INDEX)(D) <= '1';
+                    MMU_SEG_THREE(INDEX_STATUS_INDEX)(D) <= '0';
                     ProtFault <= '0';
                 --Otherwise
                 --Calculate the PAB
@@ -250,7 +251,7 @@ IF rising_edge(CLK) THEN
                     PAB <= DEFAULT_PAB;
                     MMU_SEG_FOUR(INDEX_STATUS_INDEX)(F) <= '1';
                     MMU_SEG_FOUR(INDEX_STATUS_INDEX)(U) <= '0';
-                    MMU_SEG_FOUR(INDEX_STATUS_INDEX)(D) <= '1';
+                    MMU_SEG_FOUR(INDEX_STATUS_INDEX)(D) <= '0';
                     ProtFault <= '0';
                 --Otherwise
                 --Calculate the PAB

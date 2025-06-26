@@ -1,35 +1,4 @@
-          -- Read Mask
-        lab <= x"00000002";
-        wait for clk_period;
-        assert db(21 downto 0) = "11" & x"FFFF000"(19 downto 0) report "Mask read error" severity error;
-        
-        -- Read Index/Status
-        lab <= x"00000003";
-        wait for clk_period;
-        assert db(31 downto 27) = "11100" and db(15 downto 0) = x"1234" 
-            report "Index/Status read error" severity error;
 
-        -- 3. Test address translation (CS=1)
-        report "Testing address translation";
-        cs <= '1';  -- Translation mode
-        
-        -- Valid access (within Segment 0)
-        lab <= x"00400800";  -- Logical address
-        wait for clk_period;
-        assert pab = "00" & x"80000800" report "Translation error" severity error;
-        assert fault = '0' report "Unexpected fault" severity error;
-        
-        -- Invalid access (no segment match)
-        lab <= x"12345678";
-        wait for clk_period;
-        assert fault = '1' report "Missing segfault" severity error;
-
-        -- 4. Test protection fault (write to RO segment)
-        report "Testing protection fault";
-        lab <= x"00400800";  -- Valid address
-        rw <= '0';           -- Write attempt
-        wait for clk_period;
-        assert fault = '1' report "Missing protfault" severity error;
 
 
 
@@ -58,3 +27,12 @@
         MMU_SEG_FOUR(INDEX_STATUS_INDEX) <= DEFAULT_INDEX_STATUS;      
     ELSE
     END IF;
+
+
+
+
+
+
+
+
+    
