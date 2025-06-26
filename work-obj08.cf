@@ -1,0 +1,7 @@
+v 4
+file . "MMU_TB.vhd" "b17636b829411e5c8f506c2f9c574cbb46ab2e04" "20250626130038.034":
+  entity mmu_tb at 44( 2247) + 0 on 13;
+  architecture behavior of mmu_tb at 53( 2398) + 0 on 14;
+file . "MMU.vhd" "96054944014ad610904a369709ebc5776946af5c" "20250626130037.960":
+  entity mmu at 45( 2344) + 0 on 11;
+  architecture structural of mmu at 63( 3162) + 0 on 12;

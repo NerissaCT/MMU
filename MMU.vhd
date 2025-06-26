@@ -30,26 +30,26 @@
 --  16 words of memory. The starting physical address is at offset 0, starting
 --  logical address is at offset 1, logical address mask at offset 2, index/
 --  status register is at offset 3 wihtin each block of four addresses for the 
---  segment registers.
---
---  A reset signal is implemented to allow for an initialization of the MMU Seg Regs.
+--  segment registers. 
 --
 --  
 --  Revision History:
 --  June 17 2025    Nerissa Finnen  Initial Implementation
 --  June 25 2025    Nerissa Finnen  Implementation
+--  June 26 2025    Nerissa Finnen  Slight debugging? (I don't think there was 
+--                                  anything wrong? I was grappling with the TB
+--                                  more than anything)
 --
 ----------------------------------------------------------------------------
 
 LIBRARY ieee;
 USE ieee.std_logic_1164.ALL;
 USE ieee.numeric_std.ALL;
---use ieee.std_logic_textio.all;
---use std.textio.all;
+use ieee.std_logic_textio.all;
+use std.textio.all;
 
 ENTITY MMU IS
     PORT (
-        RESET : in    STD_LOGIC;    --Reset the system to initialize the MMU Seg Regs (active high)
         LAB :   in    STD_LOGIC_VECTOR(31 downto 0);    --logical address bus
         RW  :   in    STD_LOGIC;    --Read/write signal (high/low)
         CS  :   in    STD_LOGIC;    --Chip select signal (active low)
@@ -93,15 +93,23 @@ ARCHITECTURE Structural OF MMU IS
     SIGNAL LAB_INDEX_TWO : STD_LOGIC_VECTOR(31 downto 0); --Holds the index after masking
     SIGNAL LAB_INDEX_THREE : STD_LOGIC_VECTOR(31 downto 0); --Holds the index after masking
     SIGNAL LAB_INDEX_FOUR : STD_LOGIC_VECTOR(31 downto 0); --Holds the index after masking
-    SIGNAL WP_SEG_REG : STD_LOGIC; --Record the WP for ProtFault protection checking
-    SIGNAL D_SEG_REG : STD_LOGIC; --Record the D for ProtFault protections checking
     SIGNAL DB_HOLD : STD_LOGIC_VECTOR(31 downto 0); --Interim bus to update the DB
-    
 
 BEGIN
 
+--Tristate the DB to properly as an inout signal
+    DB <= DB_HOLD when ((CS = '0') AND (RW = '1')) else (others => 'Z');
 
-DB <= DB_HOLD when ((CS = '0') AND (RW = '1')) else (others => 'Z');
+--Combinationally assign the LAB segments and indexes to update on time for CS = 1 operations
+    LAB_SEGMENT_ONE <= LAB AND MMU_SEG_ONE(MASK_INDEX);
+    LAB_SEGMENT_TWO <= LAB AND MMU_SEG_TWO(MASK_INDEX);
+    LAB_SEGMENT_THREE <= LAB AND MMU_SEG_THREE(MASK_INDEX);
+    LAB_SEGMENT_FOUR <= LAB AND MMU_SEG_FOUR(MASK_INDEX);
+
+    LAB_INDEX_ONE <= LAB AND (NOT MMU_SEG_ONE(MASK_INDEX));
+    LAB_INDEX_TWO <= LAB AND (NOT MMU_SEG_TWO(MASK_INDEX));
+    LAB_INDEX_THREE <= LAB AND (NOT MMU_SEG_THREE(MASK_INDEX));
+    LAB_INDEX_FOUR <= LAB AND (NOT MMU_SEG_FOUR(MASK_INDEX));
 
 --Update MMU actions with the clock
 Process(CLK) 
@@ -113,21 +121,6 @@ IF rising_edge(CLK) THEN
     --Checks LAB matches and generates the PAB upon hit
     --Updates the Status Bits
     IF CS = '1' THEN
-
-        --I know this is horrible
-        --But please bare with me
-        --It is convenient
-        --I wish I made procedures
-        LAB_SEGMENT_ONE <= LAB AND MMU_SEG_ONE(MASK_INDEX);
-        LAB_SEGMENT_TWO <= LAB AND MMU_SEG_TWO(MASK_INDEX);
-        LAB_SEGMENT_THREE <= LAB AND MMU_SEG_THREE(MASK_INDEX);
-        LAB_SEGMENT_FOUR <= LAB AND MMU_SEG_FOUR(MASK_INDEX);
-
-        LAB_INDEX_ONE <= LAB AND (NOT MMU_SEG_ONE(MASK_INDEX));
-        LAB_INDEX_TWO <= LAB AND (NOT MMU_SEG_TWO(MASK_INDEX));
-        LAB_INDEX_THREE <= LAB AND (NOT MMU_SEG_THREE(MASK_INDEX));
-        LAB_INDEX_FOUR <= LAB AND (NOT MMU_SEG_FOUR(MASK_INDEX));
-
         --Procedure: SegFault
         --Segment match -> no Segment Fault
         IF std_match(LAB_SEGMENT_ONE, MMU_SEG_ONE(LOGICAL_ADDRESS_INDEX)) THEN
@@ -154,17 +147,15 @@ IF rising_edge(CLK) THEN
                 --Update F <= 0
                 --No ProtFault <= 1
                 ELSE
-                    PAB <= (MMU_SEG_ONE(PHYSICAL_ADDRESS_INDEX) AND MMU_SEG_ONE(MASK_INDEX)) & LAB_INDEX_ONE(9 downto 0);
+                    PAB <= (MMU_SEG_ONE(PHYSICAL_ADDRESS_INDEX) AND MMU_SEG_ONE(MASK_INDEX)) & (LAB_INDEX_ONE(9 downto 0));
                     MMU_SEG_ONE(INDEX_STATUS_INDEX)(F) <= '0';
                     MMU_SEG_ONE(INDEX_STATUS_INDEX)(U) <= '1';
                     MMU_SEG_ONE(INDEX_STATUS_INDEX)(D) <= NOT RW;
                     ProtFault <= '1';
                 END IF;
-            --Otherwise
-            --SegFault
+            --Otherwise (not enabled)
             --Default the PAB
             ELSE 
-                SegFault <= '0';
                 PAB <= DEFAULT_PAB;
             END IF;
 
